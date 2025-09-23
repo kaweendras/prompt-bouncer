@@ -1,0 +1,55 @@
+{
+    "name": "@kaweendras/MouthGuard",
+    "version": "1.0.0",
+    "description": "A lightweight, customizable content moderation library for AI applications. Filters profanity, explicit content, and inappropriate prompts for text-to-image generation.",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "tsc",
+        "dev": "tsc --watch",
+        "test": "jest",
+        "test:watch": "jest --watch",
+        "test:coverage": "jest --coverage",
+        "prepublishOnly": "npm run build",
+        "clean": "rm -rf dist"
+    },
+    "keywords": [
+        "content-moderation",
+        "profanity-filter",
+        "ai-safety",
+        "text-filtering",
+        "content-safety",
+        "moderation",
+        "nsfw-filter",
+        "ai-content-filter",
+        "typescript"
+    ],
+    "author": {
+        "name": "Salitha Kaweendra",
+        "email": "kaweendra@example.com"
+    },
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/kaweendras/MouthGuard.git"
+    },
+    "bugs": {
+        "url": "https://github.com/kaweendras/MouthGuard/issues"
+    },
+    "homepage": "https://github.com/kaweendras/MouthGuard#readme",
+    "files": [
+        "dist",
+        "README.md",
+        "LICENSE"
+    ],
+    "devDependencies": {
+        "@types/jest": "^29.5.14",
+        "@types/node": "^20.6.0",
+        "jest": "^29.7.0",
+        "ts-jest": "^29.1.1",
+        "typescript": "^5.2.2"
+    },
+    "engines": {
+        "node": ">=14.0.0"
+    }
+}

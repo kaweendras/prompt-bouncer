@@ -1,0 +1,335 @@
+import { FilterConfig, ModerationResult } from "./types";
+import { DETECTION_CATEGORIES, getAllKeywords } from "./wordLists";
+
+/**
+ * Default configuration for the content filter
+ */
+const DEFAULT_CONFIG: Required<FilterConfig> = {
+  enableProfanityFilter: true,
+  enableExplicitFilter: true,
+  enableViolenceFilter: true,
+  customBannedWords: [],
+  allowedWords: [],
+  caseSensitive: false,
+  strictWordBoundaries: true,
+};
+
+/**
+ * AI Content Filter - Main class for content moderation
+ */
+export class AIContentFilter {
+  private config: Required<FilterConfig>;
+  private bannedWords: Set<string>;
+  private allowedWords: Set<string>;
+
+  constructor(config: FilterConfig = {}) {
+    this.config = { ...DEFAULT_CONFIG, ...config };
+    this.bannedWords = new Set();
+    this.allowedWords = new Set(this.config.allowedWords);
+    this.initializeBannedWords();
+  }
+
+  /**
+   * Initialize the banned words list based on configuration
+   */
+  private initializeBannedWords(): void {
+    // Add words from enabled categories
+    Object.entries(DETECTION_CATEGORIES).forEach(([categoryName, category]) => {
+      const shouldInclude = this.shouldIncludeCategory(categoryName);
+      if (shouldInclude) {
+        category.keywords.forEach((word) => {
+          const processedWord = this.config.caseSensitive
+            ? word
+            : word.toLowerCase();
+          this.bannedWords.add(processedWord);
+        });
+      }
+    });
+
+    // Add custom banned words
+    this.config.customBannedWords.forEach((word) => {
+      const processedWord = this.config.caseSensitive
+        ? word
+        : word.toLowerCase();
+      this.bannedWords.add(processedWord);
+    });
+  }
+
+  /**
+   * Check if a category should be included based on config
+   */
+  private shouldIncludeCategory(categoryName: string): boolean {
+    switch (categoryName) {
+      case "profanity":
+        return this.config.enableProfanityFilter;
+      case "explicit":
+        return this.config.enableExplicitFilter;
+      case "violence":
+      case "self_harm":
+        return this.config.enableViolenceFilter;
+      default:
+        return true; // Include other categories by default
+    }
+  }
+
+  /**
+   * Normalize text for processing
+   */
+  private normalizeText(text: string): string {
+    if (!this.config.caseSensitive) {
+      text = text.toLowerCase();
+    }
+
+    // Replace common character substitutions
+    const substitutions: Record<string, string> = {
+      "@": "a",
+      "3": "e",
+      "1": "i",
+      "0": "o",
+      "5": "s",
+      "7": "t",
+      $: "s",
+      "!": "i",
+    };
+
+    let normalized = text;
+    Object.entries(substitutions).forEach(([char, replacement]) => {
+      // Escape special regex characters
+      const escapedChar = char.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      normalized = normalized.replace(
+        new RegExp(escapedChar, "g"),
+        replacement
+      );
+    });
+
+    return normalized;
+  }
+
+  /**
+   * Extract words from text
+   */
+  private extractWords(text: string): string[] {
+    // Remove punctuation and split by whitespace
+    const cleanText = text.replace(/[^\w\s]/g, " ");
+    return cleanText.split(/\s+/).filter((word) => word.length > 0);
+  }
+
+  /**
+   * Check if a word matches any banned word
+   */
+  private isWordBanned(word: string): {
+    isBanned: boolean;
+    matchedWord?: string;
+    category?: string;
+  } {
+    const normalizedWord = this.normalizeText(word);
+
+    // Check if word is in allowed list
+    if (this.allowedWords.has(normalizedWord)) {
+      return { isBanned: false };
+    }
+
+    // Check exact matches
+    if (this.bannedWords.has(normalizedWord)) {
+      return {
+        isBanned: true,
+        matchedWord: normalizedWord,
+        category: this.getCategoryForWord(normalizedWord),
+      };
+    }
+
+    // Check for partial matches if strict word boundaries is disabled
+    if (!this.config.strictWordBoundaries) {
+      for (const bannedWord of this.bannedWords) {
+        if (
+          normalizedWord.includes(bannedWord) ||
+          bannedWord.includes(normalizedWord)
+        ) {
+          return {
+            isBanned: true,
+            matchedWord: bannedWord,
+            category: this.getCategoryForWord(bannedWord),
+          };
+        }
+      }
+    }
+
+    return { isBanned: false };
+  }
+
+  /**
+   * Get category for a specific word
+   */
+  private getCategoryForWord(word: string): string {
+    for (const [categoryName, category] of Object.entries(
+      DETECTION_CATEGORIES
+    )) {
+      if (category.keywords.includes(word)) {
+        return categoryName;
+      }
+    }
+    return "custom";
+  }
+
+  /**
+   * Get severity for categories
+   */
+  private getSeverityForCategories(
+    categories: string[]
+  ): "low" | "medium" | "high" {
+    if (
+      categories.some((cat) => DETECTION_CATEGORIES[cat]?.severity === "high")
+    ) {
+      return "high";
+    }
+    if (
+      categories.some((cat) => DETECTION_CATEGORIES[cat]?.severity === "medium")
+    ) {
+      return "medium";
+    }
+    return "low";
+  }
+
+  /**
+   * Clean text by replacing banned words
+   */
+  private cleanText(text: string, flaggedWords: string[]): string {
+    let cleaned = text;
+
+    flaggedWords.forEach((word) => {
+      const replacement = "*".repeat(word.length);
+      const regex = new RegExp(
+        `\\b${word}\\b`,
+        this.config.caseSensitive ? "g" : "gi"
+      );
+      cleaned = cleaned.replace(regex, replacement);
+    });
+
+    return cleaned;
+  }
+
+  /**
+   * Main moderation function
+   */
+  public moderate(text: string): ModerationResult {
+    if (!text || typeof text !== "string") {
+      return {
+        isSafe: true,
+        flaggedWords: [],
+        categories: [],
+        confidence: 0,
+        originalText: text || "",
+        cleanedText: text || "",
+        severity: "low",
+      };
+    }
+
+    const words = this.extractWords(text);
+    const flaggedWords: string[] = [];
+    const categories: Set<string> = new Set();
+
+    // Check each word
+    words.forEach((word) => {
+      const result = this.isWordBanned(word);
+      if (result.isBanned && result.matchedWord) {
+        flaggedWords.push(result.matchedWord);
+        if (result.category) {
+          categories.add(result.category);
+        }
+      }
+    });
+
+    const categoriesArray = Array.from(categories);
+    const isSafe = flaggedWords.length === 0;
+    const severity = this.getSeverityForCategories(categoriesArray);
+    const confidence =
+      flaggedWords.length > 0 ? Math.min(flaggedWords.length * 0.25, 1.0) : 0;
+
+    return {
+      isSafe,
+      reason: !isSafe
+        ? `Content contains ${categoriesArray.join(", ")} violations`
+        : undefined,
+      flaggedWords: [...new Set(flaggedWords)], // Remove duplicates
+      categories: categoriesArray,
+      confidence,
+      originalText: text,
+      cleanedText: this.cleanText(text, flaggedWords),
+      severity,
+    };
+  }
+
+  /**
+   * Quick boolean check if content is safe
+   */
+  public isSafe(text: string): boolean {
+    return this.moderate(text).isSafe;
+  }
+
+  /**
+   * Get only flagged words
+   */
+  public getFlaggedWords(text: string): string[] {
+    return this.moderate(text).flaggedWords;
+  }
+
+  /**
+   * Get cleaned version of text
+   */
+  public clean(text: string): string {
+    return this.moderate(text).cleanedText;
+  }
+
+  /**
+   * Add custom words to banned list
+   */
+  public addBannedWords(words: string[]): void {
+    words.forEach((word) => {
+      const processedWord = this.config.caseSensitive
+        ? word
+        : word.toLowerCase();
+      this.bannedWords.add(processedWord);
+    });
+  }
+
+  /**
+   * Remove words from banned list
+   */
+  public removeBannedWords(words: string[]): void {
+    words.forEach((word) => {
+      const processedWord = this.config.caseSensitive
+        ? word
+        : word.toLowerCase();
+      this.bannedWords.delete(processedWord);
+    });
+  }
+
+  /**
+   * Add words to allowed list
+   */
+  public addAllowedWords(words: string[]): void {
+    words.forEach((word) => {
+      const processedWord = this.config.caseSensitive
+        ? word
+        : word.toLowerCase();
+      this.allowedWords.add(processedWord);
+    });
+  }
+
+  /**
+   * Get current configuration
+   */
+  public getConfig(): FilterConfig {
+    return { ...this.config };
+  }
+
+  /**
+   * Update configuration
+   */
+  public updateConfig(newConfig: Partial<FilterConfig>): void {
+    this.config = { ...this.config, ...newConfig };
+    this.bannedWords.clear();
+    this.allowedWords = new Set(this.config.allowedWords);
+    this.initializeBannedWords();
+  }
+}
