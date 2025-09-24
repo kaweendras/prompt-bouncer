@@ -1,15 +1,11 @@
-# Example usage of the AI Content Filter
+# Example usage of Prompt Bouncer
 
-This directory contains example usage of the `@kaweendras/ai-content-filter` package.
+This directory contains example usage of the `prompt-bouncer` package.
 
 ## Basic Example
 
 ```typescript
-import {
-  AIContentFilter,
-  moderate,
-  isSafe,
-} from "@kaweendras/ai-content-filter";
+import { AIContentFilter, moderate, isSafe } from "prompt-bouncer";
 
 // Quick safety check
 console.log(isSafe("Create a beautiful sunset image")); // true
@@ -50,7 +46,7 @@ console.log(customResult.isSafe); // true (because 'damn' is whitelisted)
 
 ```typescript
 import express from "express";
-import { moderate } from "@kaweendras/ai-content-filter";
+import { moderate } from "prompt-bouncer";
 
 const app = express();
 
@@ -79,7 +75,7 @@ app.post("/api/generate-image", (req, res) => {
 
 ```typescript
 import React, { useState } from "react";
-import { moderate } from "@kaweendras/ai-content-filter";
+import { moderate } from "prompt-bouncer";
 
 function ImagePromptInput() {
   const [prompt, setPrompt] = useState("");
