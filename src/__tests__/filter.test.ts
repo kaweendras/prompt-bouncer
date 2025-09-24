@@ -186,3 +186,168 @@ describe("Convenience Functions", () => {
     expect(flagged).toContain("shit");
   });
 });
+
+describe("Phrase vs Word Context Detection", () => {
+  const filter = new AIContentFilter();
+
+  test("should detect violent phrase 'want to kill you' as violence", () => {
+    const result = filter.moderate("want to kill you");
+    expect(result.isSafe).toBe(false);
+    expect(result.categories).toContain("violence");
+    // Should detect both "want to kill" and "kill you" phrases
+    expect(result.flaggedWords).toContain("want to kill");
+    expect(result.flaggedWords).toContain("kill you");
+    expect(result.severity).toBe("high");
+  });
+
+  test("should allow 'i killed the bugs' as safe context", () => {
+    const result = filter.moderate("i killed the bugs");
+    expect(result.isSafe).toBe(true);
+    expect(result.categories).not.toContain("violence");
+    expect(result.flaggedWords).toHaveLength(0);
+  });
+
+  test("should allow 'that movie was fire' as safe (mild filter disabled)", () => {
+    const result = filter.moderate("that movie was fire");
+    // With enableMildFilter: false (default), "fire" is not flagged
+    expect(result.isSafe).toBe(true);
+    expect(result.categories).not.toContain("mild");
+    expect(result.categories).not.toContain("violence");
+    expect(result.flaggedWords).toHaveLength(0);
+    expect(result.severity).toBe("low");
+  });
+
+  test("should detect 'I want to set fire on someone' as violence", () => {
+    const result = filter.moderate("I want to set fire on someone");
+    // Should be detected as violence (arson threat)
+    expect(result.isSafe).toBe(false);
+    expect(result.categories).toContain("violence");
+    expect(result.flaggedWords).toContain("set fire on");
+    expect(result.flaggedWords).toContain("want to set fire");
+    expect(result.severity).toBe("high");
+  });
+
+  test("should prioritize violence phrases over individual mild words", () => {
+    const result = filter.moderate("I want to kill him now");
+    expect(result.isSafe).toBe(false);
+    expect(result.categories).toContain("violence");
+    // Should detect both "want to kill" and "kill him" as violence phrases
+    expect(result.flaggedWords.some((word) => word.includes("kill"))).toBe(
+      true
+    );
+    expect(result.severity).toBe("high");
+  });
+
+  test("should handle multiple context scenarios correctly", () => {
+    // Actually safe contexts (no flagged words)
+    const safeCases = [
+      "I killed time waiting",
+      "That joke killed me (laughing)",
+    ];
+
+    safeCases.forEach((text) => {
+      const result = filter.moderate(text);
+      expect(result.isSafe).toBe(true);
+      expect(result.flaggedWords).toHaveLength(0);
+    });
+
+    // Additional safe contexts (now that mild filter is disabled by default)
+    const additionalSafeCases = [
+      "This song is fire",
+      "The fire was warm",
+      "Kill the process in task manager",
+    ];
+
+    additionalSafeCases.forEach((text) => {
+      const result = filter.moderate(text);
+      expect(result.isSafe).toBe(true);
+      expect(result.flaggedWords).toHaveLength(0);
+    });
+
+    // Violent contexts (high severity phrases)
+    const violentCases = [
+      "want to kill you",
+      "I want to shoot him",
+      "want to stab someone",
+      "kill you now",
+    ];
+
+    violentCases.forEach((text) => {
+      const result = filter.moderate(text);
+      expect(result.isSafe).toBe(false);
+      expect(result.categories).toContain("violence");
+      expect(result.severity).toBe("high");
+    });
+  });
+
+  test("should demonstrate phrase vs individual word context", () => {
+    // Individual word "kill" in technical context vs violent phrase context
+    const technicalResult = filter.moderate(
+      "I need to kill this bug in my code"
+    );
+    const violentResult = filter.moderate("I want to kill you");
+
+    // Bug killing should be safe (mild filter disabled, no violent phrases)
+    expect(technicalResult.isSafe).toBe(true);
+    expect(technicalResult.categories).toHaveLength(0);
+    expect(technicalResult.flaggedWords).toHaveLength(0);
+    expect(technicalResult.severity).toBe("low");
+
+    // Threat should be violence (phrase "want to kill" + "kill you" flagged)
+    expect(violentResult.isSafe).toBe(false);
+    expect(violentResult.categories).toContain("violence");
+    expect(violentResult.flaggedWords).toContain("want to kill");
+    expect(violentResult.flaggedWords).toContain("kill you");
+    expect(violentResult.severity).toBe("high");
+
+    // The violence case should have higher severity than technical usage
+    expect(violentResult.severity).toBe("high");
+    expect(technicalResult.severity).toBe("low");
+  });
+
+  test("should allow users to enable mild filter if desired", () => {
+    // Create filter with mild detection enabled
+    const strictFilter = new AIContentFilter({
+      enableMildFilter: true,
+    });
+
+    const result = strictFilter.moderate("This song is fire");
+
+    // With mild filter enabled, should flag "fire"
+    expect(result.isSafe).toBe(false);
+    expect(result.categories).toContain("mild");
+    expect(result.flaggedWords).toContain("fire");
+    expect(result.severity).toBe("low");
+  });
+
+  test("should properly detect arson-related violence phrases", () => {
+    const arsonPhrases = [
+      "I want to set fire on someone",
+      "I will set fire to the building",
+      "want to burn someone",
+      "burn you alive",
+    ];
+
+    const safeFire = [
+      "that movie was fire",
+      "fire the employee",
+      "the campfire was warm",
+      "fire up the engine",
+    ];
+
+    // Violent arson phrases should be flagged
+    arsonPhrases.forEach((text) => {
+      const result = filter.moderate(text);
+      expect(result.isSafe).toBe(false);
+      expect(result.categories).toContain("violence");
+      expect(result.severity).toBe("high");
+    });
+
+    // Safe fire-related phrases should pass
+    safeFire.forEach((text) => {
+      const result = filter.moderate(text);
+      expect(result.isSafe).toBe(true);
+      expect(result.categories).not.toContain("violence");
+    });
+  });
+});

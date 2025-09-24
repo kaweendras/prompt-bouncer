@@ -8,6 +8,10 @@ const DEFAULT_CONFIG: Required<FilterConfig> = {
   enableProfanityFilter: true,
   enableExplicitFilter: true,
   enableViolenceFilter: true,
+  enableSelfHarmFilter: true,
+  enableDrugsFilter: false,
+  enableHateSpeechFilter: true,
+  enableMildFilter: false, // Disabled by default - allows contextual usage
   customBannedWords: [],
   allowedWords: [],
   caseSensitive: false,
@@ -65,10 +69,17 @@ export class AIContentFilter {
       case "explicit":
         return this.config.enableExplicitFilter;
       case "violence":
-      case "self_harm":
         return this.config.enableViolenceFilter;
+      case "self_harm":
+        return this.config.enableSelfHarmFilter;
+      case "drugs":
+        return this.config.enableDrugsFilter;
+      case "hate":
+        return this.config.enableHateSpeechFilter;
+      case "mild":
+        return this.config.enableMildFilter;
       default:
-        return true; // Include other categories by default
+        return false; // Don't include unknown categories
     }
   }
 
@@ -224,17 +235,51 @@ export class AIContentFilter {
       };
     }
 
-    const words = this.extractWords(text);
     const flaggedWords: string[] = [];
     const categories: Set<string> = new Set();
+    const normalizedText = this.normalizeText(text);
 
-    // Check each word
+    // First, check for multi-word phrases (higher priority)
+    this.bannedWords.forEach((bannedWord) => {
+      if (bannedWord.includes(" ")) {
+        // Multi-word phrase
+        const regex = this.config.strictWordBoundaries
+          ? new RegExp(
+              `\\b${bannedWord.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`,
+              this.config.caseSensitive ? "g" : "gi"
+            )
+          : new RegExp(
+              bannedWord.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+              this.config.caseSensitive ? "g" : "gi"
+            );
+
+        if (regex.test(this.config.caseSensitive ? text : normalizedText)) {
+          flaggedWords.push(bannedWord);
+          const category = this.getCategoryForWord(bannedWord);
+          if (category) {
+            categories.add(category);
+          }
+        }
+      }
+    });
+
+    // Then check individual words (only if not part of an already flagged phrase)
+    const words = this.extractWords(text);
     words.forEach((word) => {
       const result = this.isWordBanned(word);
       if (result.isBanned && result.matchedWord) {
-        flaggedWords.push(result.matchedWord);
-        if (result.category) {
-          categories.add(result.category);
+        // Check if this word is part of an already detected phrase
+        const isPartOfPhrase = flaggedWords.some(
+          (flaggedPhrase) =>
+            flaggedPhrase.includes(" ") &&
+            flaggedPhrase.includes(result.matchedWord!)
+        );
+
+        if (!isPartOfPhrase) {
+          flaggedWords.push(result.matchedWord);
+          if (result.category) {
+            categories.add(result.category);
+          }
         }
       }
     });

@@ -8,6 +8,14 @@ export interface FilterConfig {
   enableExplicitFilter?: boolean;
   /** Enable violence/harmful content detection */
   enableViolenceFilter?: boolean;
+  /** Enable self-harm content detection */
+  enableSelfHarmFilter?: boolean;
+  /** Enable drug-related content detection */
+  enableDrugsFilter?: boolean;
+  /** Enable hate speech detection */
+  enableHateSpeechFilter?: boolean;
+  /** Enable mild content detection (gaming, technical terms, mild expressions) */
+  enableMildFilter?: boolean;
   /** Custom words to add to the filter */
   customBannedWords?: string[];
   /** Words to allow (whitelist) */

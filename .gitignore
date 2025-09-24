@@ -1,6 +1,7 @@
 /node_modules
 /.env
 /dist
+/tests
 .DS_Store
 *.log
 .idea/
@@ -9,3 +10,4 @@
 *.swo
 PACKAGE-COMPLETE.md
 PUBLISHING-GUIDE.md
+test-phrases.js
