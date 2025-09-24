@@ -1,4 +1,4 @@
-![Prompt Bouncer Banner](https://i.ibb.co/9HQQKWFB/banner.png)
+![Prompt Bouncer Banner](./banner.png)
 
 # Prompt Bouncer
 
