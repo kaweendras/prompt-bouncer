@@ -2,6 +2,7 @@
 /.env
 /dist
 /tests
+/bouncertest
 .DS_Store
 *.log
 .idea/
