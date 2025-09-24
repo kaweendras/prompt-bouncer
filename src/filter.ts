@@ -8,6 +8,10 @@ const DEFAULT_CONFIG: Required<FilterConfig> = {
   enableProfanityFilter: true,
   enableExplicitFilter: true,
   enableViolenceFilter: true,
+  enableSelfHarmFilter: true,
+  enableDrugsFilter: false,
+  enableHateSpeechFilter: true,
+  enableMildFilter: false, // Disabled by default - allows contextual usage
   customBannedWords: [],
   allowedWords: [],
   caseSensitive: false,
@@ -65,10 +69,17 @@ export class AIContentFilter {
       case "explicit":
         return this.config.enableExplicitFilter;
       case "violence":
-      case "self_harm":
         return this.config.enableViolenceFilter;
+      case "self_harm":
+        return this.config.enableSelfHarmFilter;
+      case "drugs":
+        return this.config.enableDrugsFilter;
+      case "hate":
+        return this.config.enableHateSpeechFilter;
+      case "mild":
+        return this.config.enableMildFilter;
       default:
-        return true; // Include other categories by default
+        return false; // Don't include unknown categories
     }
   }
 
