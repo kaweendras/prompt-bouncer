@@ -1,5 +1,5 @@
 {
-    "name": "@kaweendras/MouthGuard",
+    "name": "prompt-bouncer",
     "version": "1.0.0",
     "description": "A lightweight, customizable content moderation library for AI applications. Filters profanity, explicit content, and inappropriate prompts for text-to-image generation.",
     "main": "dist/index.js",
@@ -25,18 +25,17 @@
         "typescript"
     ],
     "author": {
-        "name": "Salitha Kaweendra",
-        "email": "kaweendra@example.com"
+        "name": "Salitha Kaweendra"
     },
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/kaweendras/MouthGuard.git"
+        "url": "git+https://github.com/kaweendras/prompt-bouncer.git"
     },
     "bugs": {
-        "url": "https://github.com/kaweendras/MouthGuard/issues"
+        "url": "https://github.com/kaweendras/prompt-bouncer/issues"
     },
-    "homepage": "https://github.com/kaweendras/MouthGuard#readme",
+    "homepage": "https://github.com/kaweendras/prompt-bouncer#readme",
     "files": [
         "dist",
         "README.md",
