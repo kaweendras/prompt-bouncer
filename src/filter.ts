@@ -224,17 +224,51 @@ export class AIContentFilter {
       };
     }
 
-    const words = this.extractWords(text);
     const flaggedWords: string[] = [];
     const categories: Set<string> = new Set();
+    const normalizedText = this.normalizeText(text);
 
-    // Check each word
+    // First, check for multi-word phrases (higher priority)
+    this.bannedWords.forEach((bannedWord) => {
+      if (bannedWord.includes(" ")) {
+        // Multi-word phrase
+        const regex = this.config.strictWordBoundaries
+          ? new RegExp(
+              `\\b${bannedWord.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`,
+              this.config.caseSensitive ? "g" : "gi"
+            )
+          : new RegExp(
+              bannedWord.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+              this.config.caseSensitive ? "g" : "gi"
+            );
+
+        if (regex.test(this.config.caseSensitive ? text : normalizedText)) {
+          flaggedWords.push(bannedWord);
+          const category = this.getCategoryForWord(bannedWord);
+          if (category) {
+            categories.add(category);
+          }
+        }
+      }
+    });
+
+    // Then check individual words (only if not part of an already flagged phrase)
+    const words = this.extractWords(text);
     words.forEach((word) => {
       const result = this.isWordBanned(word);
       if (result.isBanned && result.matchedWord) {
-        flaggedWords.push(result.matchedWord);
-        if (result.category) {
-          categories.add(result.category);
+        // Check if this word is part of an already detected phrase
+        const isPartOfPhrase = flaggedWords.some(
+          (flaggedPhrase) =>
+            flaggedPhrase.includes(" ") &&
+            flaggedPhrase.includes(result.matchedWord!)
+        );
+
+        if (!isPartOfPhrase) {
+          flaggedWords.push(result.matchedWord);
+          if (result.category) {
+            categories.add(result.category);
+          }
         }
       }
     });
