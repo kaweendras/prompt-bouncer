@@ -40,9 +40,9 @@ describe("AIContentFilter", () => {
     });
 
     test("should detect violent content", () => {
-      const result = filter.moderate("I want to kill someone");
+      const result = filter.moderate("I want to murder someone");
       expect(result.isSafe).toBe(false);
-      expect(result.flaggedWords).toContain("kill");
+      expect(result.flaggedWords).toContain("murder");
       expect(result.categories).toContain("violence");
       expect(result.severity).toBe("high");
     });
@@ -153,7 +153,7 @@ describe("AIContentFilter", () => {
 
   describe("Multiple Categories", () => {
     test("should detect multiple violation categories", () => {
-      const result = filter.moderate("I want to kill and see nude photos");
+      const result = filter.moderate("I want to murder and see nude photos");
       expect(result.isSafe).toBe(false);
       expect(result.categories).toContain("violence");
       expect(result.categories).toContain("explicit");
