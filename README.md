@@ -474,7 +474,7 @@ MIT License - see LICENSE file for details.
 
 ## 📧 Support
 
-For support, please open an issue on GitHub or contact [kaweendra@example.com](mailto:kaweendra@example.com).
+For support, please open an issue on GitHub
 
 ## 🎯 Roadmap
 
