@@ -1,3 +1,5 @@
+![Prompt Bouncer Banner](https://i.ibb.co/NgFMQzZC/banner.png)
+
 # Prompt Bouncer
 
 A lightweight, customizable content moderation library for AI applications. Perfect for filtering profanity, explicit content, and inappropriate prompts for text-to-image generation and other AI services.
