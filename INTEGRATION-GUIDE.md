@@ -1,12 +1,11 @@
-# 🔧 Quick Integration Script for Workers AI Cloudflare
-
-## After Publishing to NPM
+# 🔧 Quick Integration Guide
 
 ### 1. Install the Package
 
 ```bash
-cd /Users/kaweendra/Documents/work/workers-ai-cloudflare
-npm install @kaweendras/ai-content-filter
+# Navigate to your project directory
+cd /path/to/your/project
+npm install prompt-bouncer
 ```
 
 ### 2. Create Moderation Service
@@ -14,11 +13,7 @@ npm install @kaweendras/ai-content-filter
 Create a new file: `src/services/moderationService.ts`
 
 ```typescript
-import {
-  moderate,
-  AIContentFilter,
-  FilterConfig,
-} from "@kaweendras/ai-content-filter";
+import { moderate, AIContentFilter, FilterConfig } from "prompt-bouncer";
 
 // Default configuration for your AI service
 const defaultConfig: FilterConfig = {
@@ -60,15 +55,15 @@ export const moderateMultipleTexts = (texts: string[]) => {
 };
 ```
 
-### 3. Update Your Generative Controller
+### 3. Update Your Controller
 
-Update `src/controllers/generativeControllers.ts`:
+Example integration with an Express.js controller:
 
 ```typescript
 import { moderatePrompt } from "../services/moderationService";
 
-// Add this to your existing textToImageController
-export const textToImageController = async (req: Request, res: Response) => {
+// Example: AI content generation controller
+export const aiContentController = async (req: Request, res: Response) => {
   try {
     const { prompt, negative_prompt } = req.body;
 
@@ -89,13 +84,13 @@ export const textToImageController = async (req: Request, res: Response) => {
       });
     }
 
-    // Optional: Also moderate negative_prompt if provided
+    // Optional: Also moderate additional prompts if provided
     if (negative_prompt) {
       const negativePromptModeration = moderatePrompt(negative_prompt);
       if (!negativePromptModeration.isSafe) {
         return res.status(400).json({
           success: false,
-          message: "Negative prompt violates our community guidelines",
+          message: "Additional prompt violates our community guidelines",
           data: {
             type: "MODERATION_VIOLATION",
             field: "negative_prompt",
@@ -106,8 +101,8 @@ export const textToImageController = async (req: Request, res: Response) => {
       }
     }
 
-    // Your existing image generation logic continues here...
-    // const { account_id } = req.user;
+    // Your existing AI generation logic continues here...
+    // Process the validated prompt with your AI service
     // ... rest of your existing code
   } catch (error) {
     // Your existing error handling
@@ -185,24 +180,31 @@ export const contentModerationMiddleware = (
 
 ### 5. Apply Middleware to Routes
 
-Update `src/routes/generativeRoutes.ts`:
+Update your routes file (e.g., `src/routes/aiRoutes.ts`):
 
 ```typescript
 import { contentModerationMiddleware } from "../middleware/contentModerationMiddleware";
 
 // Apply to your routes
 router.post(
-  "/text-to-image",
+  "/generate-content",
   authMiddleware,
   contentModerationMiddleware, // Add this line
-  textToImageController
+  aiContentController
 );
 
 router.post(
-  "/inpaint",
+  "/chat",
   authMiddleware,
   contentModerationMiddleware, // Add this line
-  inpaintController
+  chatController
+);
+
+router.post(
+  "/image-generation",
+  authMiddleware,
+  contentModerationMiddleware, // Add this line
+  imageGenerationController
 );
 ```
 
@@ -244,7 +246,7 @@ Add to your main project's `package.json`:
 ```json
 {
   "dependencies": {
-    "@kaweendras/ai-content-filter": "^1.0.0"
+    "prompt-bouncer": "^1.0.0"
   }
 }
 ```
@@ -274,11 +276,11 @@ const defaultConfig: FilterConfig = {
 
 ## 🚀 You're Ready!
 
-After publishing your npm package, run these commands to integrate:
+Run these commands to integrate:
 
 ```bash
 # 1. Install the package
-npm install @kaweendras/ai-content-filter
+npm install prompt-bouncer
 
 # 2. Create the moderation service file
 # Copy the code above to src/services/moderationService.ts
@@ -289,4 +291,71 @@ npm install @kaweendras/ai-content-filter
 npm run test
 ```
 
-Your AI image generation service now has professional content moderation! 🛡️
+Your application now has professional content moderation! 🛡️
+
+## 📋 Integration Checklist
+
+- [ ] Package installed via npm
+- [ ] Moderation service created
+- [ ] Controllers updated with moderation logic
+- [ ] Middleware configured (optional)
+- [ ] Routes updated with middleware
+- [ ] Environment variables configured
+- [ ] Integration tested
+- [ ] Error handling implemented
+
+## 🔧 Framework-Specific Examples
+
+### Next.js API Routes
+
+```typescript
+// pages/api/generate.ts or app/api/generate/route.ts
+import { moderatePrompt } from "../../services/moderationService";
+
+export default async function handler(req, res) {
+  const { prompt } = req.body;
+
+  const moderation = moderatePrompt(prompt);
+  if (!moderation.isSafe) {
+    return res.status(400).json({ error: moderation.reason });
+  }
+
+  // Your generation logic here
+}
+```
+
+### Fastify
+
+```typescript
+import { moderatePrompt } from "../services/moderationService";
+
+fastify.post("/generate", async (request, reply) => {
+  const { prompt } = request.body;
+
+  const moderation = moderatePrompt(prompt);
+  if (!moderation.isSafe) {
+    return reply.status(400).send({ error: moderation.reason });
+  }
+
+  // Your generation logic here
+});
+```
+
+### Koa.js
+
+```typescript
+import { moderatePrompt } from "../services/moderationService";
+
+router.post("/generate", async (ctx) => {
+  const { prompt } = ctx.request.body;
+
+  const moderation = moderatePrompt(prompt);
+  if (!moderation.isSafe) {
+    ctx.status = 400;
+    ctx.body = { error: moderation.reason };
+    return;
+  }
+
+  // Your generation logic here
+});
+```
