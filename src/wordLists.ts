@@ -446,7 +446,7 @@ export const DETECTION_CATEGORIES: Record<string, DetectionCategory> = {
       "shoot him",
       "shoot her",
       "shoot myself",
-      "want to Kill",
+      "want to kill",
       "want to shoot",
       "want to stab",
       "want to strangle",

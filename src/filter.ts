@@ -29,7 +29,12 @@ export class AIContentFilter {
   constructor(config: FilterConfig = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.bannedWords = new Set();
-    this.allowedWords = new Set(this.config.allowedWords);
+    // Normalize allowed words for case sensitivity
+    this.allowedWords = new Set(
+      this.config.allowedWords.map((word) =>
+        this.config.caseSensitive ? word : word.toLowerCase()
+      )
+    );
     this.initializeBannedWords();
   }
 
@@ -175,7 +180,19 @@ export class AIContentFilter {
     for (const [categoryName, category] of Object.entries(
       DETECTION_CATEGORIES
     )) {
-      if (category.keywords.includes(word)) {
+      // Check if the word exists in this category's keywords
+      // Handle case sensitivity properly by comparing lowercased versions
+      const wordExists = category.keywords.some((keyword) => {
+        const processedKeyword = this.config.caseSensitive
+          ? keyword
+          : keyword.toLowerCase();
+        const processedWord = this.config.caseSensitive
+          ? word
+          : word.toLowerCase();
+        return processedKeyword === processedWord;
+      });
+
+      if (wordExists) {
         return categoryName;
       }
     }
@@ -335,6 +352,15 @@ export class AIContentFilter {
         : word.toLowerCase();
       this.bannedWords.add(processedWord);
     });
+
+    // Persist to config - avoid duplicates
+    const newWords = words.filter(
+      (word) => !this.config.customBannedWords.includes(word)
+    );
+    this.config.customBannedWords = [
+      ...this.config.customBannedWords,
+      ...newWords,
+    ];
   }
 
   /**
@@ -347,6 +373,11 @@ export class AIContentFilter {
         : word.toLowerCase();
       this.bannedWords.delete(processedWord);
     });
+
+    // Remove from config
+    this.config.customBannedWords = this.config.customBannedWords.filter(
+      (configWord) => !words.includes(configWord)
+    );
   }
 
   /**
@@ -359,6 +390,12 @@ export class AIContentFilter {
         : word.toLowerCase();
       this.allowedWords.add(processedWord);
     });
+
+    // Persist to config - avoid duplicates
+    const newWords = words.filter(
+      (word) => !this.config.allowedWords.includes(word)
+    );
+    this.config.allowedWords = [...this.config.allowedWords, ...newWords];
   }
 
   /**
@@ -374,7 +411,12 @@ export class AIContentFilter {
   public updateConfig(newConfig: Partial<FilterConfig>): void {
     this.config = { ...this.config, ...newConfig };
     this.bannedWords.clear();
-    this.allowedWords = new Set(this.config.allowedWords);
+    // Normalize allowed words for case sensitivity
+    this.allowedWords = new Set(
+      this.config.allowedWords.map((word) =>
+        this.config.caseSensitive ? word : word.toLowerCase()
+      )
+    );
     this.initializeBannedWords();
   }
 }
