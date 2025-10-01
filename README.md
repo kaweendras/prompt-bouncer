@@ -262,7 +262,7 @@ function isContentAcceptable(text: string) {
 
 **📊 Real-world Impact**: Blocking mild content can lead to 40-60% false positives in creative applications, gaming platforms, and technical documentation.
 
-## �🔄 API Reference
+## 🔄 API Reference
 
 ### Class: AIContentFilter
 
@@ -431,20 +431,6 @@ const strictFilter = new AIContentFilter({
 
 📁 **[View complete integration examples →](./samples/integration-example.ts)**
 
-## 📁 Project Structure & Examples
-
-```
-prompt-bouncer/
-├── src/                      # Source code
-│   ├── filter.ts            # Main AIContentFilter class
-│   ├── types.ts             # TypeScript interfaces
-│   ├── wordLists.ts         # Detection categories and keywords
-│   └── index.ts             # Main exports
-├── samples/                  # Integration examples
-│   └── integration-example.ts # Complete integration samples
-└── dist/                     # Compiled JavaScript
-```
-
 ### 📚 Available Examples
 
 - **[integration-example.ts](./samples/integration-example.ts)** - Complete integration patterns for:
@@ -454,35 +440,6 @@ prompt-bouncer/
   - Configuration presets
   - Different moderation strategies
 
-## 🧪 Testing
-
-```bash
-npm test                 # Run tests
-npm run test:watch      # Run tests in watch mode
-npm run test:coverage   # Run tests with coverage
-```
-
 ## 📝 License
 
 MIT License - see LICENSE file for details.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📧 Support
-
-For support, please open an issue on GitHub
-
-## 🎯 Roadmap
-
-- [ ] Multi-language support
-- [ ] Machine learning-based detection
-- [ ] Browser/Web Worker support
-- [ ] Custom severity levels
-- [ ] Regex pattern support
-- [ ] Performance optimizations
