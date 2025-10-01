@@ -1,6 +1,6 @@
 {
     "name": "prompt-bouncer",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "A lightweight, customizable content moderation library for AI applications. Filters profanity, explicit content, and inappropriate prompts for text-to-image generation.",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
