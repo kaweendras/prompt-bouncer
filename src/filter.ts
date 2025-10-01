@@ -374,9 +374,18 @@ export class AIContentFilter {
       this.bannedWords.delete(processedWord);
     });
 
-    // Remove from config
+    // Remove from config - handle case sensitivity properly
     this.config.customBannedWords = this.config.customBannedWords.filter(
-      (configWord) => !words.includes(configWord)
+      (configWord) => {
+        // Check if any of the words to remove match this config word
+        return !words.some((wordToRemove) => {
+          if (this.config.caseSensitive) {
+            return configWord === wordToRemove;
+          } else {
+            return configWord.toLowerCase() === wordToRemove.toLowerCase();
+          }
+        });
+      }
     );
   }
 
