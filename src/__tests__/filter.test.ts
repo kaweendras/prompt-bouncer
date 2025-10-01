@@ -194,8 +194,8 @@ describe("Phrase vs Word Context Detection", () => {
     const result = filter.moderate("want to kill you");
     expect(result.isSafe).toBe(false);
     expect(result.categories).toContain("violence");
-    // Should detect both "want to kill" and "kill you" phrases
-    expect(result.flaggedWords).toContain("want to kill");
+    // Should detect both "want to kill you" and "kill you" phrases
+    expect(result.flaggedWords).toContain("want to kill you");
     expect(result.flaggedWords).toContain("kill you");
     expect(result.severity).toBe("high");
   });
@@ -293,10 +293,10 @@ describe("Phrase vs Word Context Detection", () => {
     expect(technicalResult.flaggedWords).toHaveLength(0);
     expect(technicalResult.severity).toBe("low");
 
-    // Threat should be violence (phrase "want to kill" + "kill you" flagged)
+    // Threat should be violence (phrase "want to kill you" + "kill you" flagged)
     expect(violentResult.isSafe).toBe(false);
     expect(violentResult.categories).toContain("violence");
-    expect(violentResult.flaggedWords).toContain("want to kill");
+    expect(violentResult.flaggedWords).toContain("want to kill you");
     expect(violentResult.flaggedWords).toContain("kill you");
     expect(violentResult.severity).toBe("high");
 
