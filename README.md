@@ -1,4 +1,6 @@
-![Prompt Bouncer Banner](https://i.ibb.co/Y7T06v0F/banner.png)
+<p align="center">
+  <img src="https://i.ibb.co/Y7T06v0F/banner.png" alt="Prompt Bouncer Banner" style="max-width: 100%; height: auto;">
+</p>
 
 # Prompt Bouncer
 
