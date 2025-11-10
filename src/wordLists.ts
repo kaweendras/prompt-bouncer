@@ -857,6 +857,8 @@ export const ADDITIONAL_VARIANTS: string[] = [
   "f u c k",
   "f u c k e r",
   "s.o.b.",
+  "N*gger",
+  "n*gger",
   "*damn",
   "*dyke",
   "*fuck*",
