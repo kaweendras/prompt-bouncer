@@ -28,14 +28,9 @@
         "name": "kaweendras"
     },
     "license": "MIT",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/kaweendras/prompt-bouncer.git"
-    },
     "bugs": {
         "url": "https://github.com/kaweendras/prompt-bouncer/issues"
     },
-    "homepage": "https://github.com/kaweendras/prompt-bouncer#readme",
     "files": [
         "dist",
         "README.md",
